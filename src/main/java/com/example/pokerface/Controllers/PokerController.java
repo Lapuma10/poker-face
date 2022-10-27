@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 import java.util.Queue;
@@ -24,33 +25,42 @@ public class PokerController {
         handAnalyzer = new HandAnalyzer();
     }
 
+    @CrossOrigin(origins = "http://localhost:3000")
     @GetMapping("/analyze")
     @ResponseBody
-    public ResponseEntity<String> analyseHand(@RequestParam List<String> hand) {
+    public HashMap<String, String> analyseHand(@RequestParam List<String> hand) {
         final Optional<Queue<Card>> cards = cardHandler.createCardQueueFromList(hand);
         if (cards.isPresent()) {
             final Queue<Card> cardsToAnalyze = cards.get();
             final Optional<String> analysisResult = handAnalyzer.analyzeHand(cardsToAnalyze);
             if (analysisResult.isPresent()) {
-                return ResponseEntity.ok(analysisResult.get());
+                HashMap<String, String> map = new HashMap<>();
+                map.put("analysis", analysisResult.get());
+                return map;
             }
         }
-        return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        return new HashMap<>();
     }
 
+    @CrossOrigin(origins = "http://localhost:3000")
     @RequestMapping("/deal")
-    public ResponseEntity<String> drawHand() {
+    public HashMap<String, String> drawHand() {
         final Queue<Card> hand = cardHandler.drawHand();
         final Optional<String> analysisResult = handAnalyzer.analyzeHand(hand);
         final List<String> handCardNames = cardHandler.getCardNamesFromQueue(hand);
 
         if (analysisResult.isPresent()) {
-            return ResponseEntity.ok(handCardNames + " " + analysisResult.get());
+            HashMap<String, String> map = new HashMap<>();
+            map.put("analysis", analysisResult.get());
+            map.put("hand", handCardNames.toString());
+
+            return map;
         }
 
-        return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        return new HashMap<>();
     }
 
+    @CrossOrigin(origins = "http://localhost:3000")
     @RequestMapping("/dealNames")
     public ResponseEntity<List<String>> drawHandNames() {
         return ResponseEntity.ok(cardHandler.getCardNamesFromQueue(cardHandler.drawHand()));
